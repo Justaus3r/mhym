@@ -1,0 +1,276 @@
+#/usr/bin/env bash
+# vim: filetype=sh
+
+
+
+###############################################################################
+#                        MHYM CONFIGURATION
+
+
+
+#--------------DWM-DEPENDENCIES------------------
+# system packages required by dwm for installation
+DWM_DEP_PACKAGES=(
+               "git" # VCS 
+               "xorg" # X.ORG Server
+               "xorg-dev" # X11 dev deps
+               "buil-essential" # dev dependencies like gcc,make
+              )
+#------------------------------------------------
+
+
+#----------------DWM-URI----------------------
+# string linking to dwm git repo
+# if not set, will be taken in a prompt
+# It can be a:
+# local git repo: file://absolute_path_to_git_repo (doesn't have to be git initialized)
+# remote git repo: https://gitlab.com/user/dwm.git
+DWM_URI=""
+#---------------------------------------------
+
+
+
+#--------------SYSTEM-PACAKES------------------
+# array for installing system packages AFTER dwm configuration
+POST_INSTALL_SYSTEM_PACAGES=(
+            )
+
+#----------------------------------------------
+
+
+#--------------WALLPAPER-SETTING------------------
+# utility for setting wallpaper
+BG_UTIL="feh"
+
+# command for BG_UTIL
+#don't include the image
+UTIL_CMD="--bg-scale "
+
+# absolute path to wallpaper
+# if not set, will be taken in a prompt
+BACKGROUND_PATH=""
+#-------------------------------------------------
+
+
+
+#---------------MISCELLANEOUS-------------------
+#misc settings
+
+# if set,mhym will run in silent mode with no prompt
+# note: will cause a crash if readline_prompt() is called
+# when this is set
+NO_PROMPT=true
+DEBUG=false
+
+#-----------------------------------------------
+
+
+#                        END CONFIGURATION
+################################################################################
+
+
+
+
+UTILITY_DEPS=( "python3" "rev" )
+
+info(){
+
+    if [[ ! -z "$NO_PROMPT" ]]; then
+        return
+    fi
+
+    local prefix_str="\x1b[34m"
+    local suffix_str="\x1b[m\n"
+    if [[ "$2" = "log" ]];then
+        prefix_str="\x1b[32m[INFO]::"
+    fi
+    printf "$prefix_str$1$suffix_str"
+}
+
+
+warning(){
+    if [[ $NO_PROMPT = true ]]; then
+        return
+    fi
+   printf "\x1b[33m[WARNING]::$1\x1b[m\n"
+}
+
+error(){
+    if [[ "$NO_PROMPT" = true ]]; then
+        return
+    fi
+   printf "\x1b[31m[ERROR]::$1\x1b[m\n"
+   if [[ "$2" = "exit-after" ]]; then
+       exit 1
+   fi
+}
+
+
+pre_run_check(){
+    if [[ -z "$BASH" ]]; then
+        error "$0 only works in BASH, quitting!" "exit-after"
+    fi
+}
+
+check_dependencies(){ 
+   for dep in "${DEPS[@]}"; do
+       if [[ ! $(command -v $dep) ]]; then
+           error "$dep not found, quitting!" "exit-after"
+        fi
+   done
+}
+
+sync_apt_repo(){
+    info "Syncing apt with remote repos" "log"
+    info "Invoking su user..."
+    su
+    yes | apt update > /dev/null
+    if [[ "$?" -ne "0" ]]; then
+        error "\`apt update\` failed, possibly due to: "
+        error "1: No root access"
+        error "2: Network failure"
+        error "3: Malformed mirrorlist / Mirror down"
+        error "Resolve this issue manually and then continue, quitting!" "exit-after"
+    fi
+    exit
+}
+
+install_n_configure_sudo(){
+    local user_name=$(whoami)
+    printf "Is sudo avaliable?: "
+    if [[ $(command -v sudo) ]]; then
+        printf "yes\n"
+        return 
+    fi
+    printf "no\n"
+    info "Installing sudo for $user_name" "log"
+    info "Invoking su user" "log"
+    su
+    apt install sudo  > /dev/null
+    if [[ "$?" -ne "0" ]]; then
+        error "error occured while installing sudo. resolve manually and continue, quitting" "quit-after"
+    fi
+    info "Adding $user_name to sudo group"
+    /sbin/usermod -aG $user_name sudo > /dev/null
+    if [[ "$?" -ne "0" ]]; then
+        error "Failed adding \`$user_name\` to sudo group. resolve manually and continue, quitting!" "exit-after"
+    fi
+    touch "$HOME/.MHYM_RESUME_STATE"
+    info "User \`$user_name\` has been added to sudo group"
+    info "a re-login is required for effect. the script will resume on re-run at current state."
+    exit 0
+}
+
+install_dwm_deps(){
+    sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
+    if [[ "$?" -ne "0" ]]; then
+        error "error while installing required dwm dependencies"
+        error "packages include: ${DWM_DEP_PACKAGES[@]}"
+        error "resolve these manually and continue, quitting!" "exit-after"
+    fi
+}
+
+__get_repo_name(){
+    local uri=$1
+    local uri_reversed=$(echo $uri | rev)
+    OIFS=$IFS
+    IFS='/'
+    read -r repo_name_rev _tmp <<< $uri_reversed
+    IFS=$OIFS
+    local endswith_dot_git=true
+    if [[ ! "${repo_name_rev:0:4}" = "tig." ]];then
+        endswith_dot_git=false
+    fi 
+    local repo_name=$(echo $repo_name_rev | rev)
+    if [[ $endswith_dot_git = true ]]; then
+        printf "${repo_name:0:-4}"
+    else
+
+        printf "$repo_name"
+    fi
+}
+
+
+__download_dwm(){
+    git clone $DWM_URI > /dev/null
+    if [[ "$?" -ne "0" ]]; then
+        error "error cloning remote dwm repo. resolve manually and continue, quitting!" "exit-after"
+    fi
+}
+
+__analyze_uri(){
+    local uri=$1
+    local reverse_uri="$(echo $uri | rev)"
+    if [[ "${uri:0:3}" = "file" ]]; then
+        printf "local"
+    elif [[ "${uri:0:3}" = "http" ]] && [[ "${reverse_uri:0:3}" = "tig." ]]; then
+        printf "remote"
+    else 
+        printf "invalid"
+    fi
+}
+
+readline_prompt(){
+    local prompt=$1
+    # a hack for tab completion, requires 
+    # to be in / for stable working and since stdout
+    # is being captured in out, can't do prompt in input()
+    local CWD="$PWD"
+    cd /
+    printf $prompt
+    local out=$(python3 -c 'import readline; readline.parse_and_bind("tab: complete"); out=input(); print(out)')
+    cd $CWD
+    printf $out
+}
+
+install_n_configure_dwm(){
+    local CWD="$PWD"
+    cd /tmp
+    if [[ -z "$DWM_URI" ]]; then
+        if [[ $NO_PROMPT = true ]]; then
+            error "can't be NO_PROMPT with partial options set, quitting!" "exit-after"
+        fi
+        DWM_URI=$(readline_prompt "[DWM URI]: ")
+    fi
+
+    local repo_type=$(__analyze_uri $DWM_URI)
+    if [[ "$repo_type" = "invalid" ]];then
+        error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
+    elif [[ "$repo_type" = "remote" ]];then
+        local repo_name=$(__get_repo_name $DWM_URI)
+        __download_dwm
+        cd repo_name
+    fi
+    info "requesting sudo access..." "log"
+    local null_redirect=""
+    if [[ $NO_PROMPT = true ]]; then
+        null_redirect="/dev/null"
+    else 
+        info "showing catalog of make commands for dwm build..." "log"
+    fi
+    sudo make install $null_redirect 
+    if [[ "$?" -ne "0" ]]; then
+        error "\`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
+    fi 
+
+    make clean >/dev/null
+    cd $CWD
+}
+
+
+set_wallpaper(){
+    if [[ -z "$BACKGROUND_PATH" ]];then
+        out=$(readline_prompt "path to background file: ")
+        BACKGROUND_PATH=$out
+    fi
+    $BG_UTIL $UTIL_CMD $BACKGROUND_PATH > /dev/null
+    if [[ "$?" -ne 0 ]];then
+        warning "Wallpaper could not be set. continuing!"
+    fi
+}
+
+if [ -d '$HOME/.MHYM_RESUME_STATE' ]; then
+    info "Resuming state after \`sudo\` install..." "log"
+    exit 0
+fi
+
