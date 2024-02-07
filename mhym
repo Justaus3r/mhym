@@ -75,7 +75,7 @@ UTILITY_DEPS=( "python3" "rev" )
 
 info(){
 
-    if [[ ! -z "$NO_PROMPT" ]]; then
+    if [[ $NO_PROMPT = true ]]; then
         return
     fi
 
@@ -96,7 +96,7 @@ warning(){
 }
 
 error(){
-    if [[ "$NO_PROMPT" = true ]]; then
+    if [[ $NO_PROMPT = true ]]; then
         return
     fi
    printf "\x1b[31m[ERROR]::$1\x1b[m\n"
@@ -269,8 +269,19 @@ set_wallpaper(){
     fi
 }
 
+
 if [ -d '$HOME/.MHYM_RESUME_STATE' ]; then
     info "Resuming state after \`sudo\` install..." "log"
+    install_dwm_deps
+    install_n_configure_dwm
+    set_wallpaper
     exit 0
 fi
 
+pre_run_check
+check_dependencies
+sync_apt_repo
+install_n_configure_sudo
+install_dwm_deps
+install_n_configure_dwm
+set_wallpaper
