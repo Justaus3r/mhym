@@ -150,12 +150,11 @@ check_dependencies(){
 sync_apt_repo(){
     info "Syncing apt with remote repos" "log"
     info "Invoking su user..."
-    su
-    if [[ "$?" -ne "0" ]];then
+    su -c 'yes | apt update > /dev/null' > /dev/null
+    if [[ "$?" -eq "1" ]];then
         error "error logging to su user, quitting" "exit-after"
-    fi
-    yes | apt update > /dev/null
-    if [[ "$?" -ne "0" ]]; then
+    
+    elif [[ "$?" -ne "0" ]]; then
         error "\`apt update\` failed, possibly due to: "
         error "1: No root access"
         error "2: Network failure"
@@ -175,12 +174,11 @@ install_n_configure_sudo(){
     printf "no\n"
     info "Installing sudo for $user_name" "log"
     info "Invoking su user" "log"
-    su > /dev/null
-    if [[ "$?" -ne "0" ]];then
+    su  -c "apt install sudo  > /dev/null"> /dev/null
+    if [[ "$?" -eq "1" ]];then
         error "error logging to su user, quitting" "exit-after"
-    fi
-    apt install sudo  > /dev/null
-    if [[ "$?" -ne "0" ]]; then
+
+    elif [[ "$?" -ne "0" ]]; then
         error "error occured while installing sudo. resolve manually and continue, quitting" "quit-after"
     fi
     info "Adding $user_name to sudo group"
