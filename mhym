@@ -1,5 +1,5 @@
 #/usr/bin/env bash
-# vim: filetype=sh
+# vim: filetype=bash
 
 
 
@@ -182,7 +182,7 @@ install_n_configure_sudo(){
         error "error occured while installing sudo. resolve manually and continue, quitting" "quit-after"
     fi
     info "Adding $user_name to sudo group"
-    /sbin/usermod -aG $user_name sudo > /dev/null
+    su -c "/sbin/usermod -aG $user_name sudo > /dev/null" > /dev/null
     if [[ "$?" -ne "0" ]]; then
         error "Failed adding \`$user_name\` to sudo group. resolve manually and continue, quitting!" "exit-after"
     fi
@@ -314,6 +314,7 @@ $xresources_cmd
 $BG_UTIL $UTIL_CMD $BACKGROUND_PATH
 exec dwm
 EOT
+  echo "[ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bashrc"
 }
 
 
