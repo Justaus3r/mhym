@@ -330,6 +330,10 @@ pre_run_check
 check_dependencies
 sync_apt_repo
 install_n_configure_sudo
+install_dwm_deps
+install_n_configure_dwm
+set_xinitrc
+ 
 #install_dwm_deps
 #install_n_configure_dwm
 #set_wallpaper
