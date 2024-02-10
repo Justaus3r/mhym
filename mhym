@@ -8,34 +8,61 @@
 
 
 
-#--------------DWM-DEPENDENCIES------------------
+#--------------DWM-SETTINGS------------------
 # system packages required by dwm for installation
 DWM_DEP_PACKAGES=(
-               "git" # VCS 
-               "xorg" # X.ORG Server
-               "xorg-dev" # X11 dev deps
-               "build-essential" # dev dependencies like gcc,make
+                "git" # VCS 
+                "xorg" # X.ORG Server
+                "xorg-dev" # X11 dev deps
+                "build-essential" # dev dependencies like gcc,make 
               )
-#------------------------------------------------
 
-
-#----------------DWM-URI----------------------
 # string linking to dwm git repo
 # if not set, will be taken in a prompt
 # It can be a:
-# local git repo: file://absolute_path_to_git_repo (doesn't have to be git initialized)
-# remote git repo: https://gitlab.com/user/dwm.git
+# local git repo, i.e: file://absolute_path_to_git_repo (doesn't have to be git initialized)
+# remote git repo, i.e: https://gitlab.com/user/dwm.git
+# uri scheme is necessary, i.e: don't forget to include file:// | https://
 DWM_URI=""
+
+
+# dwm install make command. excluding ``sudo``, 
+# change this if you have changed the ``install`` target to something else
+DWM_MAKE_CMD="make install"
+
+
+
 #---------------------------------------------
 
 
 
-#--------------SYSTEM-PACAKES------------------
+#-------------DMENU-SETTING-------------------
+# dmenu configuration
+
+DMENU_URI=""
+
+
+
+#---------------------------------------------
+
+
+
+#-----------TERMINAL-EMULATOR-SETTING--------
+#
+
+
+
+
+#-----------------------------------------------
+
+
+#--------------POST-INSTALL-SYSTEM-PACAKES------------------
 # array for installing system packages AFTER dwm configuration
 POST_INSTALL_SYSTEM_PACAGES=(
-            )
+                "feh"
+                 )
 
-#----------------------------------------------
+#------------------------------------------------------------
 
 
 
@@ -86,7 +113,7 @@ BACKGROUND_PATH=""
 # if set,mhym will run in silent mode with no prompt
 # note: will cause a crash if readline_prompt() is called
 # when this is set
-NO_PROMPT=true
+NO_PROMPT=false
 DEBUG=false
 
 #-----------------------------------------------
@@ -95,6 +122,13 @@ DEBUG=false
 #                        END CONFIGURATION
 ################################################################################
 
+UTILITY_VERSION="0.1.0"
+
+
+
+if [[ $NO_PROMPT != true ]];then
+    echo "banner"
+fi
 
 
 
@@ -123,7 +157,9 @@ warning(){
 }
 
 error(){
-    if [[ $NO_PROMPT = true ]]; then
+    if [[ $NO_PROMPT = true ]] && [[ "$2" = "exit-after" ]];then
+	exit 1
+    elif [[ $NO_PROMPT = true ]]; then
         return
     fi
    printf "\x1b[31m[ERROR]::$1\x1b[m\n"
@@ -150,11 +186,11 @@ check_dependencies(){
 sync_apt_repo(){
     info "Syncing apt with remote repos" "log"
     info "Invoking su user..."
-    su -c 'yes | apt update > /dev/null' > /dev/null
-    if [[ "$?" -eq "1" ]];then
-        error "error logging to su user, quitting" "exit-after"
-    
-    elif [[ "$?" -ne "0" ]]; then
+    su -c "yes | apt update" > /dev/null
+    local ret_code=$?
+    if [[ $ret_code -eq 1 ]];then
+        error "error logging to su user, quitting" "exit-after" 
+    elif [[ $ret_code -ne 0 ]]; then
         error "\`apt update\` failed, possibly due to: "
         error "1: No root access"
         error "2: Network failure"
@@ -173,7 +209,7 @@ install_n_configure_sudo(){
     printf "no\n"
     info "Installing sudo for $user_name" "log"
     info "Invoking su user" "log"
-    su  -c "apt install sudo  > /dev/null" > /dev/null
+    su  -c "yes | apt install sudo" > /dev/null
     if [[ "$?" -eq "1" ]];then
         error "error logging to su user, quitting" "exit-after"
 
@@ -231,9 +267,9 @@ __download_dwm(){
 __analyze_uri(){
     local uri=$1
     local reverse_uri="$(echo $uri | rev)"
-    if [[ "${uri:0:3}" = "file" ]]; then
+    if [[ "${uri:0:4}" = "file" ]]; then
         printf "local"
-    elif [[ "${uri:0:3}" = "http" ]] && [[ "${reverse_uri:0:3}" = "tig." ]]; then
+    elif [[ "${uri:0:4}" = "http" ]] && [[ "${reverse_uri:0:4}" = "tig." ]] || [[ "${uri:8:3}" = "git" ]]; then
         printf "remote"
     else 
         printf "invalid"
@@ -241,15 +277,10 @@ __analyze_uri(){
 }
 
 readline_prompt(){
-    local prompt=$1
-    # a hack for tab completion, requires 
+    # a hack for tab completion, requires CWD 
     # to be in / for stable working and since stdout
     # is being captured in out, can't do prompt in input()
-    local CWD="$PWD"
-    cd /
-    printf $prompt
-    local out=$(python3 -c 'import readline; readline.parse_and_bind("tab: complete"); out=input(); print(out)')
-    cd $CWD
+    local out=$(cd / && python3 -c 'import readline; readline.parse_and_bind("tab: complete"); out=input(); print(out)')
     printf $out
 }
 
@@ -260,7 +291,8 @@ install_n_configure_dwm(){
         if [[ $NO_PROMPT = true ]]; then
             error "can't be NO_PROMPT with partial options set, quitting!" "exit-after"
         fi
-        DWM_URI=$(readline_prompt "[DWM URI]: ")
+	info "[DWM URI]: "
+        DWM_URI=$(readline_prompt) 
     fi
 
     local repo_type=$(__analyze_uri $DWM_URI)
@@ -269,28 +301,37 @@ install_n_configure_dwm(){
     elif [[ "$repo_type" = "remote" ]];then
         local repo_name=$(__get_repo_name $DWM_URI)
         __download_dwm
-        cd repo_name
+        cd ./$repo_name
+    elif [[ "$repo_type" = "local" ]];then
+        # truncate the file:// scheme
+        DWM_URI="${DWM_URI:7}" 
+         cd $DWM_URI
     fi
     info "requesting sudo access..." "log"
     local null_redirect=""
     if [[ $NO_PROMPT = true ]]; then
-        null_redirect="/dev/null"
+        null_redirect=" > /dev/null"
     else 
         info "showing catalog of make commands for dwm build..." "log"
     fi
-    sudo make install $null_redirect 
+    sudo $DWM_MAKE_CMD $null_redirect 
     if [[ "$?" -ne "0" ]]; then
         error "\`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi 
-
     make clean >/dev/null
     cd $CWD
+    info "installing post-install system-packages" "log"
+    yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
+    if [[ "$?" -ne "0" ]];then
+    	warning "system packages installation failed, continuing!"
+    fi
 }
 
 
 set_xinitrc(){
     if [[ -z "$BACKGROUND_PATH" ]];then
-        out=$(readline_prompt "path to wallpaper file: ")
+	printf "path to wallpaper file: "
+        out=$(readline_prompt )
         BACKGROUND_PATH=$out
     fi
     
@@ -331,8 +372,4 @@ sync_apt_repo
 install_n_configure_sudo
 install_dwm_deps
 install_n_configure_dwm
-set_xinitrc
- 
-#install_dwm_deps
-#install_n_configure_dwm
-#set_wallpaper
+set_xinitrc 
