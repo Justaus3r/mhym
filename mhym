@@ -60,6 +60,7 @@ DMENU_URI=""
 # array for installing system packages AFTER dwm configuration
 POST_INSTALL_SYSTEM_PACAGES=(
                 "feh"
+                 "systemd-sysv"
                  )
 
 #------------------------------------------------------------
