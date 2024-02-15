@@ -42,12 +42,11 @@ DWM_MAKE_CMD="make install"
 DMENU_URI=""
 
 
-
 #---------------------------------------------
 
 
 
-#-----------TERMINAL-EMULATOR-SETTING--------
+#-----------TERMINAL-EMULATOR-SETTING-----------
 #
 
 
@@ -56,19 +55,15 @@ DMENU_URI=""
 #-----------------------------------------------
 
 
-#--------------POST-INSTALL-SYSTEM-PACAKES------------------
-# array for installing system packages AFTER dwm configuration
-POST_INSTALL_SYSTEM_PACAGES=(
-                "feh"
-                 "systemd-sysv"
-                 )
 
-#------------------------------------------------------------
+#------------XSERVER-SETTING----------------------
+#settings for X.ORG server 
 
 
-
-#------------XRESOURCES-SETTING----------------------
-#settings for .Xresources
+# appends a conditional command, to .bashrc after dwm setup, that starts
+# X server if its not running.
+# set it to false, if you already have it in .bashrc
+EXEC_AT_LOGIN_APPENDBASHRC=true
 
 #set this to true ,if you want to overwrite
 #.Xresources
@@ -100,7 +95,6 @@ BACKGROUND_PATH=""
 #-------------------------------------------------
 
 
-
 #---------------STATUS-BAR-SETTING----------------
 # settings for dwm status-bar
 
@@ -108,14 +102,30 @@ BACKGROUND_PATH=""
 #-------------------------------------------------
 
 
+#--------------POST-INSTALL-SYSTEM-PACAKES------------------
+# array for installing system packages AFTER dwm configuration
+POST_INSTALL_SYSTEM_PACAGES=(
+                "feh"
+                 "systemd-sysv"
+                 )
+
+#------------------------------------------------------------
+
+
+
 #---------------MISCELLANEOUS-------------------
 #misc settings
 
-# if set,mhym will run in silent mode with no prompt
+# if set,mhym will run in silent mode with none if its prompts
 # note: will cause a crash if readline_prompt() is called
 # when this is set
 NO_PROMPT=false
+
+# give debug info
 DEBUG=false
+
+
+
 
 #-----------------------------------------------
 
@@ -173,6 +183,16 @@ error(){
 pre_run_check(){
     if [[ -z "$BASH" ]]; then
         error "$0 only works in BASH, quitting!" "exit-after"
+    fi
+    
+    if [[ "$OSTYPE" != "linux-gnu" ]];then
+        error "Unsupported System!, quitting!" "exit-after"
+    fi
+    
+    local distribution_id=$(cat /etc/*-release | grep -w "ID")
+    local distribution="${distribution_id:3}"
+    if [[ "$distribution" != "debian" ]];then
+        warning "Non-debian system detected!. you may face compatibility issues!. continuing..."
     fi
 }
 
@@ -332,7 +352,7 @@ install_n_configure_dwm(){
 set_xinitrc(){
     if [[ -z "$BACKGROUND_PATH" ]];then
 	printf "path to wallpaper file: "
-        out=$(readline_prompt )
+        out=$(readline_prompt)
         BACKGROUND_PATH=$out
     fi
     
@@ -355,7 +375,9 @@ $xresources_cmd
 $BG_UTIL $UTIL_CMD $BACKGROUND_PATH
 exec dwm
 EOT
-  echo "[ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bashrc"
+    if [[ $EXEC_AT_LOGIN_APPENDBASHRC = true ]]; then
+        echo "[ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bashrc"
+    fi
 }
 
 
