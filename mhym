@@ -193,6 +193,7 @@ pre_run_check(){
     local distribution="${distribution_id:3}"
     if [[ "$distribution" != "debian" ]];then
         warning "Non-debian system detected!. you may face compatibility issues!. continuing..."
+        sleep 1.5
     fi
 }
 
@@ -225,11 +226,26 @@ install_n_configure_sudo(){
     printf "Is sudo avaliable?: "
     if [[ $(command -v sudo) ]]; then
         printf "yes\n"
-        return 
+        return
+    else
+        printf "no\n"
     fi
-    printf "no\n"
+    read -n1 -p "Do you want me to try to automatically install and configure sudo [Y/N] " opt
+    case $opt in
+        Y | y | yes)
+            # using true as nop.
+            # YES i don't know a better way
+           true 
+        ;;
+        *)
+            info "script interrupted!. install/configure sudo manually and continue."
+            info "Note: you may create $HOME/.MHYM_RESUME_STATE to resume the script after this step."
+            info "quitting!"
+            exit 0
+        ;;
+    esac
     info "Installing sudo for $user_name" "log"
-    info "Invoking su user" "log"
+    info "Invoking su user..." "log"
     su  -c "yes | apt install sudo" > /dev/null
     if [[ "$?" -eq "1" ]];then
         error "error logging to su user, quitting" "exit-after"
