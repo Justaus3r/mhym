@@ -248,16 +248,16 @@ install_n_configure_sudo(){
     info "Installing sudo for $user_name" "log"
     info "Invoking su user..." "log"
     su  -c "yes | apt install sudo" > /dev/null
-    if [[ "$?" -eq "1" ]];then
+    if [[ $? -eq 1 ]];then
         error "error logging to su user, quitting" "exit-after"
 
-    elif [[ "$?" -ne "0" ]]; then
+    elif [[ $? -ne 0 ]]; then
 
-        error "error occured while installing sudo\nnon-zero return-code returned\n RET CODE: $?\nresolve manually and continue, quitting" "exit-after"
+        error "error occured while installing sudo\nReason: \nnon-zero return-code returned\nRET CODE: $?\nresolve manually and continue, quitting" "exit-after"
     fi
     info "Adding $user_name to sudo group"
     su -c "/sbin/usermod -aG $user_name sudo > /dev/null" > /dev/null
-    if [[ "$?" -ne "0" ]]; then
+    if [[ $? -ne 0 ]]; then
         error "Failed adding \`$user_name\` to sudo group. resolve manually and continue, quitting!" "exit-after"
     fi
     touch "$HOME/.MHYM_RESUME_STATE"
@@ -268,7 +268,7 @@ install_n_configure_sudo(){
 
 install_dwm_deps(){
     sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
-    if [[ "$?" -ne "0" ]]; then
+    if [[ $? -ne 0 ]]; then
         error "error while installing required dwm dependencies"
         error "packages include: ${DWM_DEP_PACKAGES[@]}"
         error "resolve these manually and continue, quitting!" "exit-after"
@@ -353,14 +353,14 @@ install_n_configure_dwm(){
         info "showing catalog of make commands for dwm build..." "log"
     fi
     sudo $DWM_MAKE_CMD $null_redirect 
-    if [[ "$?" -ne "0" ]]; then
+    if [[ $? -ne 0 ]]; then
         error "\`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi 
     make clean >/dev/null
     cd $CWD
     info "installing post-install system-packages" "log"
     yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
-    if [[ "$?" -ne "0" ]];then
+    if [[ $? -ne 0 ]];then
     	warning "system packages installation failed, continuing!"
     fi
 }
