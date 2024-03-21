@@ -244,6 +244,7 @@ install_n_configure_sudo(){
             exit 0
         ;;
     esac
+    printf "\n"
     info "Installing sudo for $user_name" "log"
     info "Invoking su user..." "log"
     su  -c "yes | apt install sudo" > /dev/null
@@ -251,7 +252,8 @@ install_n_configure_sudo(){
         error "error logging to su user, quitting" "exit-after"
 
     elif [[ "$?" -ne "0" ]]; then
-        error "error occured while installing sudo. resolve manually and continue, quitting" "quit-after"
+
+        error "error occured while installing sudo\nnon-zero return-code returned\n RET CODE: $?\nresolve manually and continue, quitting" "exit-after"
     fi
     info "Adding $user_name to sudo group"
     su -c "/sbin/usermod -aG $user_name sudo > /dev/null" > /dev/null
