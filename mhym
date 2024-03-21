@@ -248,10 +248,11 @@ install_n_configure_sudo(){
     info "Installing sudo for $user_name" "log"
     info "Invoking su user..." "log"
     su  -c "yes | apt install sudo" > /dev/null
-    if [[ $? -eq 1 ]];then
+    local ret_code=$?
+    if [[ $ret_code -eq 1 ]];then
         error "error logging to su user, quitting" "exit-after"
 
-    elif [[ $? -ne 0 ]]; then
+    elif [[ $ret_code -ne 0 ]]; then
 
         error "error occured while installing sudo\nReason: \nnon-zero return-code returned\nRET CODE: $?\nresolve manually and continue, quitting" "exit-after"
     fi
