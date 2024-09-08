@@ -32,6 +32,8 @@ DWM_MAKE_CMD="make install"
 
 
 
+#TODO: ADD SUPPORT FOR DWM PATCHES
+
 #---------------------------------------------
 
 
@@ -130,7 +132,10 @@ DEBUG=false
 #-----------------------------------------------
 
 
-#                        END CONFIGURATION
+
+
+
+#                        END MHYM CONFIGURATION
 ################################################################################
 
 UTILITY_VERSION="0.1.0"
@@ -257,7 +262,7 @@ install_n_configure_sudo(){
         error "error occured while installing sudo\nReason: \nnon-zero return-code returned\nRET CODE: $?\nresolve manually and continue, quitting" "exit-after"
     fi
     info "Adding $user_name to sudo group"
-    su -c "/sbin/usermod -aG $user_name sudo > /dev/null" > /dev/null
+    su -c "/sbin/usermod -aG sudo $user_name> /dev/null" > /dev/null
     if [[ $? -ne 0 ]]; then
         error "Failed adding \`$user_name\` to sudo group. resolve manually and continue, quitting!" "exit-after"
     fi
