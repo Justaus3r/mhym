@@ -27,7 +27,7 @@ DWM_URI=""
 
 
 # dwm install make command. excluding ``sudo``, 
-# change this if you have changed the ``install`` target to something else
+# change this if you have changed the ``install`` target in Makefile to something else
 DWM_MAKE_CMD="make install"
 
 
@@ -49,10 +49,17 @@ DMENU_URI=""
 
 
 #-----------TERMINAL-EMULATOR-SETTING-----------
-#
+
+# NOTE: For now, this section only includes the package name for terminal emulator. change it to one, that you like
+# this is set to change in next MINOR version
+
+#TODO: a utility planned in zig, that automatically handles management of
+# all the terminal emulators that are installed. The idea is that, the
+# tool will manage all the emulators and will fork and run the one that 
+# is configured by the user.
 
 
-
+TERMINAL_PKG="rxvt-unicode"
 
 #-----------------------------------------------
 
@@ -138,6 +145,11 @@ DEBUG=false
 #                        END MHYM CONFIGURATION
 ################################################################################
 
+
+
+
+
+
 UTILITY_VERSION="0.1.0"
 
 
@@ -197,7 +209,7 @@ pre_run_check(){
     local distribution_id=$(cat /etc/*-release | grep -w "ID")
     local distribution="${distribution_id:3}"
     if [[ "$distribution" != "debian" ]];then
-        warning "Non-debian system detected!. you may face compatibility issues!. continuing..."
+        warning "Non-debian system detected!. Platforms other than Debian are Untested!. continuing..."
         sleep 1.5
     fi
 }
@@ -302,7 +314,7 @@ __get_repo_name(){
 }
 
 
-__download_dwm(){
+git_clone_dwm(){
     git clone $DWM_URI > /dev/null
     if [[ "$?" -ne "0" ]]; then
         error "error cloning remote dwm repo. resolve manually and continue, quitting!" "exit-after"
@@ -344,7 +356,7 @@ install_n_configure_dwm(){
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     elif [[ "$repo_type" = "remote" ]];then
         local repo_name=$(__get_repo_name $DWM_URI)
-        __download_dwm
+        git_clone_dwm
         cd ./$repo_name
     elif [[ "$repo_type" = "local" ]];then
         # truncate the file:// scheme
