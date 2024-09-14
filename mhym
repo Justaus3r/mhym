@@ -43,7 +43,7 @@ DWM_MAKE_CMD="make install"
 
 DMENU_URI=""
 
-
+DMENU_MAKE_CMD="make install"
 #---------------------------------------------
 
 
@@ -314,10 +314,11 @@ __get_repo_name(){
 }
 
 
-git_clone_dwm(){
-    git clone $DWM_URI > /dev/null
+git_clone_repo(){
+    local repo_uri=$1
+    git clone $repo_uri > /dev/null
     if [[ "$?" -ne "0" ]]; then
-        error "error cloning remote dwm repo. resolve manually and continue, quitting!" "exit-after"
+        error "error cloning remote repository at $repo_uri. resolve manually and continue, quitting!" "exit-after"
     fi
 }
 
@@ -356,12 +357,15 @@ install_n_configure_dwm(){
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     elif [[ "$repo_type" = "remote" ]];then
         local repo_name=$(__get_repo_name $DWM_URI)
-        git_clone_dwm
+        git_clone_repo $DWM_URI
         cd ./$repo_name
     elif [[ "$repo_type" = "local" ]];then
         # truncate the file:// scheme
         DWM_URI="${DWM_URI:7}" 
          cd $DWM_URI
+    else
+        warning "uri assertion has failed , report this issue!"
+        error "Invalid uri. quitting!..." "exit-after"
     fi
     info "requesting sudo access..." "log"
     local null_redirect=""
@@ -376,13 +380,47 @@ install_n_configure_dwm(){
     fi 
     make clean >/dev/null
     cd $CWD
+}
+
+install_n_configure_dmenu(){
+    local cwd = $PWD
+    cd /tmp
+    local repo_type=$(__analyze_uri $DMENU_URI)
+    if [[ $repo_type = "invalid" ]];then
+        error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
+    elif [[ $repo_type = "file" ]]; then
+        local truncted_filepath=${DMENU_URI:7}
+        cd $truncted_filepath
+    elif [[ $repo_type = "remote" ]];then
+        git_clone_repo $DMENU_URI
+        local repo_name=$(__get_repo_name $DMENU_URI)
+        cd repo_name
+    else
+        warning "uri assertion has failed , report this issue!"
+        error "Invalid uri. quitting!..." "exit-after"
+    fi
+
+    info "requesting sudo access..." "log"
+    local null_redirect=""
+    if [[ $NO_PROMPT = true ]]; then
+        null_redirect=" > /dev/null"
+    else 
+        info "showing catalog of make commands for dmenu build..." "log"
+    fi 
+    sudo $DMENU_MAKE_CMD $null_redirect
+    if [[ $? -ne 0 ]]; then
+        error "\`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
+    fi
+    make clean > /dev/null
+}
+
+setup_post_install_packages(){
     info "installing post-install system-packages" "log"
     yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
     if [[ $? -ne 0 ]];then
     	warning "system packages installation failed, continuing!"
     fi
 }
-
 
 set_xinitrc(){
     if [[ -z "$BACKGROUND_PATH" ]];then
@@ -417,7 +455,10 @@ EOT
 
 
 clean_up_n_exit(){
+    # clean up and exit
     rm "$HOME/.MHYM_RESUME_STATE"
+    rm /tmp/dwm* 
+    rm /tmp/dmenu*
     exit 0
 }
 
