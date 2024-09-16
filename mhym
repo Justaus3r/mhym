@@ -160,7 +160,7 @@ fi
 
 
 
-UTILITY_DEPS=( "python3" "rev" )
+UTILITY_DEPS=( "rev" )
 
 info(){
 
@@ -385,6 +385,9 @@ install_n_configure_dwm(){
 install_n_configure_dmenu(){
     local cwd = $PWD
     cd /tmp
+    if [[ -z "$DMENU_URI" ]]; then
+        readline_prompt "[DMENU URI]: " DMENU_URI
+    fi
     local repo_type=$(__analyze_uri $DMENU_URI)
     if [[ $repo_type = "invalid" ]];then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
@@ -414,6 +417,14 @@ install_n_configure_dmenu(){
     make clean > /dev/null
 }
 
+install_n_configure_terminal_emulator(){
+    # ig, for now we just install the relevant package
+    sudo apt install $TERMINAL_PKG
+    if [[ $? -ne 0 ]]; then
+        warning "error while installing `$TERMINAL_PKG` terminal emulator package. Please install it manually afterwards..."
+    fi
+}
+
 setup_post_install_packages(){
     info "installing post-install system-packages" "log"
     yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
@@ -422,9 +433,11 @@ setup_post_install_packages(){
     fi
 }
 
+
+
 set_xinitrc(){
     if [[ -z "$BACKGROUND_PATH" ]];then
-        readline_prompt -e -p "path to wallpaper file: " out
+        readline_prompt "path to wallpaper file: " out
         BACKGROUND_PATH=$out
     fi
     
@@ -466,6 +479,8 @@ if [ -d '$HOME/.MHYM_RESUME_STATE' ]; then
     info "Resuming state after \`sudo\` install..." "log"
     install_dwm_deps
     install_n_configure_dwm
+    install_n_configure_dmenu
+    install_n_configure_terminal_emulator
     set_xinitrc
     clean_up_n_exit
 fi
@@ -476,5 +491,7 @@ sync_apt_repo
 install_n_configure_sudo
 install_dwm_deps
 install_n_configure_dwm
+install_n_configure_dmenu
+install_n_configure_terminal_emulator
 set_xinitrc
 clean_up_n_exit
