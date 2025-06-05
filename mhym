@@ -434,7 +434,7 @@ install_n_configure_dmenu(){
 
 install_n_configure_terminal_emulator(){
     # ig, for now we just install the relevant package
-    sudo apt install $TERMINAL_PKG
+    yes | sudo apt install $TERMINAL_PKG
     if [[ $? -ne 0 ]]; then
         warning "error while installing `$TERMINAL_PKG` terminal emulator package. Please install it manually afterwards..."
     fi
