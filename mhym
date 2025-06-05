@@ -1,6 +1,9 @@
 #/usr/bin/env bash
 # vim: filetype=bash
 
+# quit on error?, not sure, but will let it be for now
+set -e
+
 
 
 ###############################################################################
@@ -53,7 +56,7 @@ DMENU_MAKE_CMD="make install"
 # NOTE: For now, this section only includes the package name for terminal emulator. change it to one, that you like
 # this is set to change in next MINOR version
 
-#TODO: a utility planned in zig, that automatically handles management of
+#TODO: a utility planned in C++, that automatically handles management of
 # all the terminal emulators that are installed. The idea is that, the
 # tool will manage all the emulators and will fork and run the one that 
 # is configured by the user.
@@ -69,10 +72,10 @@ TERMINAL_PKG="rxvt-unicode"
 #settings for X.ORG server 
 
 
-# appends a conditional command, to .bashrc after dwm setup, that starts
+# appends a conditional command, to .bash_profile after dwm setup, that starts
 # X server if its not running.
 # set it to false, if you already have it in .bashrc
-EXEC_AT_LOGIN_APPENDBASHRC=true
+EXEC_AT_LOGIN=true
 
 #set this to true ,if you want to overwrite
 #.Xresources
@@ -155,7 +158,7 @@ UTILITY_VERSION="0.1.0"
 
 
 if [[ $NO_PROMPT != true ]];then
-    echo "banner"
+    echo "MHYM "$UTILITY_VERSION
 fi
 
 
@@ -230,7 +233,7 @@ sync_apt_repo(){
     if [[ $ret_code -eq 1 ]];then
         error "error logging to su user, quitting" "exit-after" 
     elif [[ $ret_code -ne 0 ]]; then
-        error "\`apt update\` failed, possibly due to: "
+        error " \`apt update\` failed, possibly due to: "
         error "1: No root access"
         error "2: Network failure"
         error "3: Malformed mirrorlist / Mirror down"
@@ -285,7 +288,8 @@ install_n_configure_sudo(){
 }
 
 install_dwm_deps(){
-    sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
+    info "Installing DWM Dependencies..."
+    yes | sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
     if [[ $? -ne 0 ]]; then
         error "error while installing required dwm dependencies"
         error "packages include: ${DWM_DEP_PACKAGES[@]}"
@@ -353,20 +357,25 @@ install_n_configure_dwm(){
 
 
     local repo_type=$(__analyze_uri $DWM_URI)
+    
     if [[ "$repo_type" = "invalid" ]];then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
+    
     elif [[ "$repo_type" = "remote" ]];then
         local repo_name=$(__get_repo_name $DWM_URI)
         git_clone_repo $DWM_URI
         cd ./$repo_name
+    
     elif [[ "$repo_type" = "local" ]];then
         # truncate the file:// scheme
         DWM_URI="${DWM_URI:7}" 
          cd $DWM_URI
-    else
+    
+     else
         warning "uri assertion has failed , report this issue!"
-        error "Invalid uri. quitting!..." "exit-after"
+        error "Invalid uri. quitting!..." "exit-after" 
     fi
+    
     info "requesting sudo access..." "log"
     local null_redirect=""
     if [[ $NO_PROMPT = true ]]; then
@@ -376,29 +385,34 @@ install_n_configure_dwm(){
     fi
     sudo $DWM_MAKE_CMD $null_redirect 
     if [[ $? -ne 0 ]]; then
-        error "\`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
+        error " \` make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi 
     make clean >/dev/null
     cd $CWD
 }
 
 install_n_configure_dmenu(){
-    local cwd = $PWD
+    local cwd="$PWD"
     cd /tmp
     if [[ -z "$DMENU_URI" ]]; then
         readline_prompt "[DMENU URI]: " DMENU_URI
     fi
     local repo_type=$(__analyze_uri $DMENU_URI)
+    
     if [[ $repo_type = "invalid" ]];then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
-    elif [[ $repo_type = "file" ]]; then
+    
+    elif [[ $repo_type = "local" ]]; then
         local truncted_filepath=${DMENU_URI:7}
         cd $truncted_filepath
+    
     elif [[ $repo_type = "remote" ]];then
         git_clone_repo $DMENU_URI
         local repo_name=$(__get_repo_name $DMENU_URI)
-        cd repo_name
+        cd $repo_name
+    
     else
+        warning "got $repo_type as repository type, which was not expected!"
         warning "uri assertion has failed , report this issue!"
         error "Invalid uri. quitting!..." "exit-after"
     fi
@@ -412,7 +426,7 @@ install_n_configure_dmenu(){
     fi 
     sudo $DMENU_MAKE_CMD $null_redirect
     if [[ $? -ne 0 ]]; then
-        error "\`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
+        error " \`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi
     make clean > /dev/null
 }
@@ -435,7 +449,7 @@ setup_post_install_packages(){
 
 
 
-set_xinitrc(){
+set_xinitrc() {
     if [[ -z "$BACKGROUND_PATH" ]];then
         readline_prompt "path to wallpaper file: " out
         BACKGROUND_PATH=$out
@@ -460,8 +474,8 @@ $xresources_cmd
 $BG_UTIL $UTIL_CMD $BACKGROUND_PATH
 exec dwm
 EOT
-    if [[ $EXEC_AT_LOGIN_APPENDBASHRC = true ]]; then
-        echo "[ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bashrc"
+    if [[ $EXEC_AT_LOGIN = true ]]; then
+        echo "[ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bash_profile"
     fi
 }
 
@@ -475,6 +489,8 @@ clean_up_n_exit(){
     exit 0
 }
 
+
+# if in a resumed state, skip to post sudo install
 if [ -d '$HOME/.MHYM_RESUME_STATE' ]; then
     info "Resuming state after \`sudo\` install..." "log"
     install_dwm_deps
@@ -484,6 +500,7 @@ if [ -d '$HOME/.MHYM_RESUME_STATE' ]; then
     set_xinitrc
     clean_up_n_exit
 fi
+
 
 pre_run_check
 check_dependencies
