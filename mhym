@@ -289,6 +289,7 @@ install_n_configure_sudo(){
 
 install_dwm_deps(){
     info "Installing DWM Dependencies..."
+    info "It may take a while... Do not do necessary inputs"
     yes | sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
     if [[ $? -ne 0 ]]; then
         error "error while installing required dwm dependencies"
