@@ -61,7 +61,7 @@ DMENU_MAKE_CMD="make install"
 # is configured by the user.
 
 
-TERMINAL_PKG="alacritty"
+TERMINAL_PKG="kitty"
 
 #-----------------------------------------------
 
@@ -118,6 +118,7 @@ BACKGROUND_PATH=""
 POST_INSTALL_SYSTEM_PACAGES=(
                 "feh"
                  "systemd-sysv"
+                 "xdg-utils"
                  )
 
 #------------------------------------------------------------
