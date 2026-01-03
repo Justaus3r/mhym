@@ -246,10 +246,10 @@ install_n_configure_sudo(){
     local user_name=$(whoami)
     printf "Is sudo avaliable?: "
     if [[ $(command -v sudo) ]]; then
-        printf "yes\n"
+        printf "\x1b[32myes\x1b[\n"
         return
     else
-        printf "no\n"
+        printf "\x1b[31mno\x1b[m\n"
     fi
     read -n1 -p "Do you want me to try to automatically install and configure sudo [Y/N] " opt
     case $opt in
