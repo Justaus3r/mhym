@@ -61,7 +61,7 @@ DMENU_MAKE_CMD="make install"
 # is configured by the user.
 
 
-TERMINAL_PKG="alacritty"
+TERMINAL_PKG="kitty"
 
 #-----------------------------------------------
 
@@ -118,6 +118,7 @@ BACKGROUND_PATH=""
 POST_INSTALL_SYSTEM_PACAGES=(
                 "feh"
                  "systemd-sysv"
+                 "xdg-utils"
                  )
 
 #------------------------------------------------------------
@@ -128,8 +129,9 @@ POST_INSTALL_SYSTEM_PACAGES=(
 #misc settings
 
 # if set,mhym will run in silent mode with none if its prompts
-# note: will cause a crash if readline_prompt() is called
-# when this is set
+# note: will cause a crash if readline_promt() is called
+# when this is set, i.e: don't set it to true, if you haven't
+# set all the pre-run configuration options here
 NO_PROMPT=false
 
 # give debug info
@@ -217,7 +219,7 @@ pre_run_check(){
 }
 
 check_dependencies(){ 
-   for dep in "${DEPS[@]}"; do
+   for dep in "${UTILITY_DEPS[@]}"; do
        if [[ ! $(command -v $dep) ]]; then
            error "$dep not found, quitting!" "exit-after"
         fi
@@ -288,7 +290,7 @@ install_n_configure_sudo(){
 
 install_dwm_deps(){
     info "Installing DWM Dependencies..."
-    info "It may take a while... Don't do necessary inputs"
+    info "It may take a while... Don't do unnecessary inputs"
     yes | sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
     if [[ $? -ne 0 ]]; then
         error "error while installing required dwm dependencies"
