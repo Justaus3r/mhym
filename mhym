@@ -109,7 +109,7 @@ BACKGROUND_PATH=""
 #---------------STATUS-BAR-SETTING----------------
 # settings for dwmbar status-bar
 
-DWMBAR_URI=""
+DWMBAR_URI="https://github.com/thytom/dwmbar.git"
 
 #-------------------------------------------------
 
