@@ -55,7 +55,7 @@ DMENU_MAKE_CMD="make install"
 # NOTE: For now, this section only includes the package name for terminal emulator. change it to one, that you like
 # this is set to change in next MINOR version
 
-#TODO: a utility planned in C++, that automatically handles management of
+#TODO: a utility planned in C, that automatically handles management of
 # all the terminal emulators that are installed. The idea is that, the
 # tool will manage all the emulators and will fork and run the one that 
 # is configured by the user.
@@ -107,18 +107,20 @@ BACKGROUND_PATH=""
 
 
 #---------------STATUS-BAR-SETTING----------------
-# settings for dwm status-bar
+# settings for dwmbar status-bar
 
+DWMBAR_URI=""
 
 #-------------------------------------------------
 
 
 #--------------POST-INSTALL-SYSTEM-PACAKES------------------
-# array for installing system packages AFTER dwm configuration
+#system packages to install AFTER dwm configuration
 POST_INSTALL_SYSTEM_PACAGES=(
                 "feh"
                  "systemd-sysv"
                  "xdg-utils"
+                 "network-manager"
                  )
 
 #------------------------------------------------------------
@@ -128,9 +130,9 @@ POST_INSTALL_SYSTEM_PACAGES=(
 #---------------MISCELLANEOUS-------------------
 #misc settings
 
-# if set,mhym will run in silent mode with none if its prompts
+# if set,mhym will run in silent mode 
 # note: will cause a crash if readline_promt() is called
-# when this is set, i.e: don't set it to true, if you haven't
+# while this is set, i.e: don't set it to true, if you haven't
 # set all the pre-run configuration options here
 NO_PROMPT=false
 
@@ -348,6 +350,7 @@ readline_prompt(){
 }
 
 install_n_configure_dwm(){
+    info "Installing DWM..." "log" 
     local CWD="$PWD"
     cd /tmp
     if [[ -z "$DWM_URI" ]]; then
@@ -394,6 +397,7 @@ install_n_configure_dwm(){
 }
 
 install_n_configure_dmenu(){
+    info "Installing DMENU..." "log" 
     local cwd="$PWD"
     cd /tmp
     if [[ -z "$DMENU_URI" ]]; then
@@ -431,6 +435,39 @@ install_n_configure_dmenu(){
         error " \`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi
     make clean > /dev/null
+}
+
+install_n_configure_dwmbar(){
+    local CWD=$PWD
+    cd /tmp
+    info "Installing DMENU..." "log" 
+    if [[ -z $DWMBAR_URI ]];then
+        readline_prompt "[DWMBAR URI]" DWMBAR_URL
+    fi
+    
+    local repo_type=$(__analyze_uri $DWMBAR_URI)
+    
+    if [[ "$repo_type" = "remote" ]]; then
+        local repo_name=$(__get_repo_name $DWMBAR_URI)
+        git clone $DWMBAR_URI
+        cd $repo_name
+    elif [[ "$repo_type" = "local" ]];then
+        local repo_name=$(__get_repo_name $DWMBAR_URI)
+        cd $repo_name
+    elif [[ "$repo_type" = "invalid" ]]; then
+        error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
+    fi
+    info "request sudo access..." "log"
+    
+    local null_redirect=""
+    if [[ $NO_PROMPT = true ]];then
+        null_redirect="> /dev/null"
+    fi
+
+    sudo ./install.sh $null_redirect
+
+    echo "exec dwmbar &" >> "$HOME/.bash_profile"   
+    cd $CWD
 }
 
 install_n_configure_terminal_emulator(){
@@ -483,7 +520,7 @@ $setbg_cmd
 exec dwm
 EOT
     if [[ $EXEC_AT_LOGIN = true ]]; then
-        echo "[ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bash_profile"
+        echo "[ -z "\$DISPLAY" ] && [ "\$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bash_profile"
     fi
 }
 
@@ -493,8 +530,8 @@ clean_up_n_exit(){
     # clean up and exit
     info "Doing post cleanup..."
     rm "$HOME/.MHYM_RESUME_STATE"
-    rm /tmp/dwm* 
-    rm /tmp/dmenu*
+    rm -rf /tmp/dwm* 
+    rm -rf /tmp/dmenu*
     exit 0
 }
 
@@ -505,6 +542,7 @@ if [ -d '$HOME/.MHYM_RESUME_STATE' ]; then
     install_dwm_deps
     install_n_configure_dwm
     install_n_configure_dmenu
+    install_n_configure_dwmbar
     install_n_configure_terminal_emulator
     setup_post_install_packages
     set_xinitrc
@@ -519,6 +557,7 @@ install_n_configure_sudo
 install_dwm_deps
 install_n_configure_dwm
 install_n_configure_dmenu
+install_n_configure_dwmbar
 install_n_configure_terminal_emulator
 setup_post_install_packages
 set_xinitrc
