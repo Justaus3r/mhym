@@ -440,7 +440,7 @@ install_n_configure_dmenu(){
 install_n_configure_dwmbar(){
     local CWD=$PWD
     cd /tmp
-    info "Installing DMENU..." "log" 
+    info "Installing DWMBAR..." "log" 
     if [[ -z $DWMBAR_URI ]];then
         readline_prompt "[DWMBAR URI]" DWMBAR_URL
     fi
