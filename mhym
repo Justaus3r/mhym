@@ -25,7 +25,7 @@ DWM_DEP_PACKAGES=(
 # local git repo, i.e: file://absolute_path_to_git_repo (doesn't have to be git initialized)
 # remote git repo, i.e: https://gitlab.com/user/dwm.git
 # uri scheme is necessary, i.e: don't forget to include file:// | https://
-DWM_URI="https://github.com/Justaus3r/my-dwm.git"
+DWM_URI=""
 
 
 # dwm install make command. excluding ``sudo``, 
@@ -43,7 +43,7 @@ DWM_MAKE_CMD="make install"
 #-------------DMENU-SETTING-------------------
 # dmenu configuration
 
-DMENU_URI="https://github.com/Justaus3r/my-dmenu.git"
+DMENU_URI=""
 
 DMENU_MAKE_CMD="make install"
 #---------------------------------------------
@@ -72,7 +72,7 @@ TERMINAL_PKG="kitty"
 
 
 # appends a conditional command, to .bash_profile after dwm setup, that starts
-# X server if its not running.
+# X server if its not running. Also runs dwmbar
 # set it to false, if you already have it in .bashrc
 EXEC_AT_LOGIN=true
 
@@ -465,8 +465,7 @@ install_n_configure_dwmbar(){
     fi
 
     sudo ./install.sh $null_redirect
-
-    echo "exec dwmbar &" >> "$HOME/.bash_profile"   
+    
     cd $CWD
 }
 
@@ -518,6 +517,7 @@ set_xinitrc() {
 $xresources_cmd
 $setbg_cmd
 exec dwm
+exec dwmbar &
 EOT
     if [[ $EXEC_AT_LOGIN = true ]]; then
         echo "[ -z "\$DISPLAY" ] && [ "\$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bash_profile"
@@ -532,6 +532,8 @@ clean_up_n_exit(){
     rm "$HOME/.MHYM_RESUME_STATE"
     rm -rf /tmp/dwm* 
     rm -rf /tmp/dmenu*
+    info "mhym has performed all the personalizations." "log"
+    ingo "Re-login to start your dwm session"
     exit 0
 }
 
