@@ -102,13 +102,15 @@ UTIL_CMD="--bg-scale "
 
 # absolute path to wallpaper
 # if not set, will be taken in a prompt
+# set to nill, for no wallpaper
 BACKGROUND_PATH=""
 #-------------------------------------------------
 
 
 #---------------STATUS-BAR-SETTING----------------
-# settings for dwmbar status-bar
+# settings for thytom/dwmbar status-bar
 
+#set to nill, if you don't want to use it
 DWMBAR_URI=""
 
 #-------------------------------------------------
@@ -440,7 +442,10 @@ install_n_configure_dmenu(){
 install_n_configure_dwmbar(){
     local CWD=$PWD
     cd /tmp
-    info "Installing DMENU..." "log" 
+    info "Installing DWMBAR..." "log"
+    if [[ "$DWMBAR_URL" = "nill" ]]; then
+        return
+    fi
     if [[ -z $DWMBAR_URI ]];then
         readline_prompt "[DWMBAR URI]" DWMBAR_URL
     fi
