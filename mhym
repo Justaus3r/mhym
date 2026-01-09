@@ -443,11 +443,11 @@ install_n_configure_dwmbar(){
     local CWD=$PWD
     cd /tmp
     info "Installing DWMBAR..." "log"
-    if [[ "$DWMBAR_URL" = "nill" ]]; then
+    if [[ "$DWMBAR_URI" = "nill" ]]; then
         return
     fi
     if [[ -z $DWMBAR_URI ]];then
-        readline_prompt "[DWMBAR URI]" DWMBAR_URL
+        readline_prompt "[DWMBAR URI]" DWMBAR_URI
     fi
     
     local repo_type=$(__analyze_uri $DWMBAR_URI)
