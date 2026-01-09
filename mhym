@@ -25,7 +25,7 @@ DWM_DEP_PACKAGES=(
 # local git repo, i.e: file://absolute_path_to_git_repo (doesn't have to be git initialized)
 # remote git repo, i.e: https://gitlab.com/user/dwm.git
 # uri scheme is necessary, i.e: don't forget to include file:// | https://
-DWM_URI=""
+DWM_URI="https://github.com/Justaus3r/my-dwm.git"
 
 
 # dwm install make command. excluding ``sudo``, 
@@ -43,7 +43,7 @@ DWM_MAKE_CMD="make install"
 #-------------DMENU-SETTING-------------------
 # dmenu configuration
 
-DMENU_URI=""
+DMENU_URI="https://github.com/Justaus3r/my-dmenu.git"
 
 DMENU_MAKE_CMD="make install"
 #---------------------------------------------
@@ -110,12 +110,9 @@ BACKGROUND_PATH=""
 #---------------STATUS-BAR-SETTING----------------
 # settings for thytom/dwmbar status-bar
 
-<<<<<<< HEAD
-DWMBAR_URI="https://github.com/thytom/dwmbar.git"
-=======
 #set to nill, if you don't want to use it
-DWMBAR_URI=""
->>>>>>> master
+DWMBAR_URI="https://github.com/thytom/dwmbar.git"
+#set to nill, if you don't want to use it
 
 #-------------------------------------------------
 
