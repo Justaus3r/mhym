@@ -124,6 +124,8 @@ POST_INSTALL_SYSTEM_PACAGES=(
                  "systemd-sysv"
                  "xdg-utils"
                  "network-manager"
+                 "blueman"
+                 "pulseaudio"
                  )
 
 #------------------------------------------------------------
