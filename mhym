@@ -126,6 +126,7 @@ POST_INSTALL_SYSTEM_PACAGES=(
                  "network-manager"
                  "neovim"
                  "blueman"
+                 "pulseaudio"
                  )
 
 #------------------------------------------------------------
