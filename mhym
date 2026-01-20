@@ -1,13 +1,10 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 # vim: filetype=bash
 
-# quit on error?, not sure, but will let it be for now
 set -e
-
 
 ###############################################################################
 #                        MHYM CONFIGURATION
-
 
 
 #--------------DWM-SETTINGS------------------
@@ -28,11 +25,9 @@ DWM_DEP_PACKAGES=(
 # uri scheme is necessary, i.e: don't forget to include file:// | https://
 DWM_URI=""
 
-
 # dwm install make command. excluding ``sudo``, 
 # change this if you have changed the ``install`` target in Makefile to something else
 DWM_MAKE_CMD="make install"
-
 
 
 #TODO: ADD SUPPORT FOR DWM PATCHES
@@ -101,10 +96,11 @@ BG_UTIL="feh"
 #don't include the image path
 UTIL_CMD="--bg-scale "
 
-# absolute path to wallpaper
+# uri for background
+# can be file:// | https://
 # if not set, will be taken in a prompt
-# set to nill, for no wallpaper
-BACKGROUND_PATH=""
+# set to nill, for no background 
+BACKGROUND_URI=""
 #-------------------------------------------------
 
 
@@ -113,7 +109,6 @@ BACKGROUND_PATH=""
 
 #set to nill, if you don't want to use it
 DWMBAR_URI=""
-#set to nill, if you don't want to use it
 
 #-------------------------------------------------
 
@@ -254,10 +249,10 @@ install_n_configure_sudo(){
     local user_name=$(whoami)
     printf "Is sudo avaliable?: "
     if [[ $(command -v sudo) ]]; then
-        printf "\x1b[32myes\x1b[\n"
+        printf "\x1b[32mYES\x1b[\n"
         return
     else
-        printf "\x1b[31mno\x1b[m\n"
+        printf "\x1b[31mNO\x1b[m\n"
     fi
     read -n1 -p "Do you want me to try to automatically install and configure sudo [Y/N] " opt
     case $opt in
@@ -342,6 +337,8 @@ __analyze_uri(){
     if [[ "${uri:0:4}" = "file" ]]; then
         printf "local"
     elif [[ "${uri:0:4}" = "http" ]] && [[ "${reverse_uri:0:4}" = "tig." ]] || [[ "${uri:8:3}" = "git" ]]; then
+        printf "remote-git"
+    elif [[ "${uri:0:4}" = "http" ]]; then
         printf "remote"
     else 
         printf "invalid"
@@ -372,7 +369,7 @@ install_n_configure_dwm(){
     if [[ "$repo_type" = "invalid" ]];then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     
-    elif [[ "$repo_type" = "remote" ]];then
+    elif [[ "$repo_type" = "remote-git" ]];then
         local repo_name=$(__get_repo_name $DWM_URI)
         git_clone_repo $DWM_URI
         cd ./$repo_name
@@ -418,7 +415,7 @@ install_n_configure_dmenu(){
         local truncted_filepath=${DMENU_URI:7}
         cd $truncted_filepath
     
-    elif [[ $repo_type = "remote" ]];then
+    elif [[ $repo_type = "remote-git" ]];then
         git_clone_repo $DMENU_URI
         local repo_name=$(__get_repo_name $DMENU_URI)
         cd $repo_name
@@ -451,18 +448,18 @@ install_n_configure_dwmbar(){
         return
     fi
     if [[ -z $DWMBAR_URI ]];then
-        readline_prompt "[DWMBAR URI]" DWMBAR_URI
+        readline_prompt "[DWMBAR URI]: " DWMBAR_URI
     fi
     
     local repo_type=$(__analyze_uri $DWMBAR_URI)
     
-    if [[ "$repo_type" = "remote" ]]; then
+    if [[ "$repo_type" = "remote-git" ]]; then
         local repo_name=$(__get_repo_name $DWMBAR_URI)
         git clone $DWMBAR_URI
         cd $repo_name
     elif [[ "$repo_type" = "local" ]];then
-        local repo_name=$(__get_repo_name $DWMBAR_URI)
-        cd $repo_name
+        DWMBAR_URI=${DWMBAR_URI:7}
+        cd $DWMBAR_URI
     elif [[ "$repo_type" = "invalid" ]]; then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     fi
@@ -497,13 +494,29 @@ setup_post_install_packages(){
 
 
 set_xinitrc() {
-    if [[ -z "$BACKGROUND_PATH" ]];then
-        readline_prompt "path to wallpaper file[ \` nill \` for None]: " out
-        BACKGROUND_PATH=$out
+    if [[ -z "$BACKGROUND_URI" ]];then
+        readline_prompt "[BACKGROUND_URI]: " out
+        BACKGROUND_URI=$out
     fi
     
+    local bg_path
+    local bg_type=$(__analyze_uri $BACKGROUND_URI)
+    local file_name 
+    if [[ "$bg_type" = "local" ]];then
+        bg_path=${BACKGROUND_URI:7}
+    elif [[ "$bg_type" = "remote" ]];then
+        file_name=$(basename $BACKGROUND_URI) 
+        wget "$BACKGROUND_URI" -O "$HOME/$filename"
+        bg_path="$HOME/$filename"
+    elif [[ "$bg_type" = "invalid" ]];then
+        error "invalid uri. please give a valid http/file uri, quitting!" "exit-after"
+    else
+        warning "got $repo_type as repository type, which was not expected!"
+        warning "uri assertion has failed , report this issue!"
+        error "Invalid uri. quitting!..." "exit-after"
+    fi
     local xresources_cmd=""
-    local setbg_cmd="$BG_UTIL $UTIL_CMD $BACKGROUND_PATH" 
+    local setbg_cmd="$BG_UTIL $UTIL_CMD $bg_path" 
     
     if [[ $out = "nill" ]];then
         setbg_cmd="" 
@@ -548,7 +561,7 @@ clean_up_n_exit(){
 
 
 # if in a resumed state, skip to post sudo install
-if [ -a "$HOME/.MHYM_RESUME_STATE" ]; then
+if [ -e "$HOME/.MHYM_RESUME_STATE" ]; then
     info "Resuming state after \`sudo\` install..." "log"
     install_dwm_deps
     install_n_configure_dwm
