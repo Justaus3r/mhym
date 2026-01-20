@@ -108,7 +108,7 @@ BACKGROUND_URI="https://raw.githubusercontent.com/D3Ext/aesthetic-wallpapers/ref
 # settings for thytom/dwmbar status-bar
 
 #set to nill, if you don't want to use it
-DWMBAR_URI=""
+DWMBAR_URI="https://github.com/thytom/dwmbar.git"
 
 #-------------------------------------------------
 
