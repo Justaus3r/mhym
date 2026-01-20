@@ -13,7 +13,7 @@ DWM_DEP_PACKAGES=(
                 "git" # VCS 
                 "xorg" # X.ORG Server
                 "xorg-dev" # X11 dev deps
-                "x11proto-dev" # X11 protocol extensions
+                "x11proto-core-dev" # X11 protocol extensions
                 "build-essential" # dev dependencies like gcc,make 
               )
 
