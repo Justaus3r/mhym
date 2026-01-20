@@ -506,8 +506,8 @@ set_xinitrc() {
         bg_path=${BACKGROUND_URI:7}
     elif [[ "$bg_type" = "remote" ]];then
         file_name=$(basename $BACKGROUND_URI) 
-        wget "$BACKGROUND_URI" -O "$HOME/$filename"
-        bg_path="$HOME/$filename"
+        wget "$BACKGROUND_URI" -O "$HOME/$file_name"
+        bg_path="$HOME/$file_name"
     elif [[ "$bg_type" = "invalid" ]];then
         error "invalid uri. please give a valid http/file uri, quitting!" "exit-after"
     else
