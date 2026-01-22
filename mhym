@@ -292,7 +292,7 @@ install_n_configure_sudo(){
 
 install_dwm_deps(){
     info "Installing DWM Dependencies..."
-    info "It may take a while... Don't do unnecessary inputs"
+    info "It may take a while... Dont do unnecessary inputs"
     yes | sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
     if [[ $? -ne 0 ]]; then
         error "error while installing required dwm dependencies"
@@ -305,7 +305,7 @@ __get_repo_name(){
     local uri=$1
     local uri_reversed=$(echo $uri | rev)
     OIFS=$IFS
-    IFS='/'
+    IFS="/"
     read -r repo_name_rev _tmp <<< $uri_reversed
     IFS=$OIFS
     local endswith_dot_git=true
