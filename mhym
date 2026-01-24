@@ -49,12 +49,8 @@ DMENU_MAKE_CMD="make install"
 #-----------TERMINAL-EMULATOR-SETTING-----------
 
 # NOTE: For now, this section only includes the package name for terminal emulator. change it to one, that you like
-# this is set to change in next MINOR version
 
-#TODO: a utility planned in C, that automatically handles management of
-# all the terminal emulators that are installed. The idea is that, the
-# tool will manage all the emulators and will fork and run the one that 
-# is configured by the user.
+#TODO: #1
 
 
 TERMINAL_PKG="kitty"
