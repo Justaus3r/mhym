@@ -23,7 +23,7 @@ DWM_DEP_PACKAGES=(
 # local git repo, i.e: file://absolute_path_to_git_repo (doesn't have to be git initialized)
 # remote git repo, i.e: https://gitlab.com/user/dwm.git
 # uri scheme is necessary, i.e: don't forget to include file:// | https://
-DWM_URI=""
+DWM_URI="https://github.com/Justaus3r/my-dwm.git"
 
 # dwm install make command. excluding ``sudo``, 
 # change this if you have changed the ``install`` target in Makefile to something else
@@ -49,12 +49,8 @@ DMENU_MAKE_CMD="make install"
 #-----------TERMINAL-EMULATOR-SETTING-----------
 
 # NOTE: For now, this section only includes the package name for terminal emulator. change it to one, that you like
-# this is set to change in next MINOR version
 
-#TODO: a utility planned in C, that automatically handles management of
-# all the terminal emulators that are installed. The idea is that, the
-# tool will manage all the emulators and will fork and run the one that 
-# is configured by the user.
+#TODO: #1
 
 
 TERMINAL_PKG="kitty"
@@ -68,7 +64,7 @@ TERMINAL_PKG="kitty"
 
 
 # appends a conditional command, to .bash_profile after dwm setup, that starts
-# X server if its not running. Also runs dwmbar
+# X server if its not running
 # set it to false, if you already have it in .bashrc
 EXEC_AT_LOGIN=true
 
@@ -108,8 +104,7 @@ BACKGROUND_URI=""
 # settings for thytom/dwmbar status-bar
 
 #set to nill, if you don't want to use it
-DWMBAR_URI="
-
+DWMBAR_URI=""
 #-------------------------------------------------
 
 
@@ -139,8 +134,6 @@ NO_PROMPT=false
 
 # give debug info
 DEBUG=false
-
-
 
 
 #-----------------------------------------------
