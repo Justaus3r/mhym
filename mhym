@@ -65,7 +65,7 @@ TERMINAL_PKG="kitty"
 
 # appends a conditional command, to .bash_profile after dwm setup, that starts
 # X server if its not running
-# set it to false, if you already have it in .bashrc
+# set it to false, if you already have it in .bash_profile
 EXEC_AT_LOGIN=true
 
 #set this to true ,if you want to overwrite
@@ -160,11 +160,12 @@ DEBUG=false
 UTILITY_VERSION="0.1.0"
 
 logo_print(){
-    echo "███    ███ ██   ██ ██    ██ ███    ███" 
-    echo "████  ████ ██   ██  ██  ██  ████  ████" 
-    echo "██ ████ ██ ███████   ████   ██ ████ ██" 
-    echo "██  ██  ██ ██   ██    ██    ██  ██  ██" 
-    echo "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION"                                       
+   info  "███    ███ ██   ██ ██    ██ ███    ███" 
+   info  "████  ████ ██   ██  ██  ██  ████  ████" 
+   info  "██ ████ ██ ███████   ████   ██ ████ ██" 
+   info  "██  ██  ██ ██   ██    ██    ██  ██  ██" 
+   info  "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION"
+   info "A utility for ricing up vanilla debian with your personal dwm setup"
 }
 
 
