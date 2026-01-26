@@ -119,6 +119,10 @@ POST_INSTALL_SYSTEM_PACAGES=(
                  "neovim"
                  "blueman"
                  "pulseaudio"
+                 "zip"
+                 "unzip"
+                 "btop"
+                 "curl"
                  )
 
 #------------------------------------------------------------
