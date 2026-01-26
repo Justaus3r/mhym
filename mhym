@@ -154,27 +154,7 @@ DEBUG=false
 
 
 
-
-
-
 UTILITY_VERSION="0.1.0"
-
-logo_print(){
-   info  "███    ███ ██   ██ ██    ██ ███    ███" 
-   info  "████  ████ ██   ██  ██  ██  ████  ████" 
-   info  "██ ████ ██ ███████   ████   ██ ████ ██" 
-   info  "██  ██  ██ ██   ██    ██    ██  ██  ██" 
-   info  "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION"
-   info "A utility for ricing up vanilla debian with your personal dwm setup"
-}
-
-
-
-if [[ $NO_PROMPT != true ]];then
-    logo_print
-fi
-
-
 UTILITY_DEPS=( "rev" )
 
 info(){
@@ -211,6 +191,20 @@ error(){
    fi
 }
 
+logo_print(){
+   info  "███    ███ ██   ██ ██    ██ ███    ███" 
+   info  "████  ████ ██   ██  ██  ██  ████  ████" 
+   info  "██ ████ ██ ███████   ████   ██ ████ ██" 
+   info  "██  ██  ██ ██   ██    ██    ██  ██  ██" 
+   info  "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION"
+   info "A utility for ricing up vanilla debian with your personal dwm setup"
+}
+
+
+
+if [[ $NO_PROMPT != true ]];then
+    logo_print
+fi
 
 pre_run_check(){
     if [[ -z "$BASH" ]]; then
