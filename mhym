@@ -545,6 +545,9 @@ EOT
     if [[ $EXEC_AT_LOGIN = true ]]; then
         echo "[ -z "\$DISPLAY" ] && [ "\$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bash_profile"
     fi
+
+    # since the current user is put in sudoers file. put /sbin to PATH
+    echo "PATH=$PATH:/sbin" >> $HOME/.bashrc
 }
 
 
