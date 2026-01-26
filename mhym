@@ -160,7 +160,7 @@ logo_print(){
     echo "████  ████ ██   ██  ██  ██  ████  ████" 
     echo "██ ████ ██ ███████   ████   ██ ████ ██" 
     echo "██  ██  ██ ██   ██    ██    ██  ██  ██" 
-    echo "██      ██ ██   ██    ██    ██      ██$UTILITY_VERSION"                                       
+    echo "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION"                                       
 }
 
 
