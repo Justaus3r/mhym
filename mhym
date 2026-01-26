@@ -492,6 +492,8 @@ install_n_configure_terminal_emulator(){
 
 setup_post_install_packages(){
     info "installing post-install system-packages" "log"
+    info "following packages will be installed:"
+    info "${POST_INSTALL_SYSTEM_PACAGES{@}}"
     yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
     if [[ $? -ne 0 ]];then
     	warning "system packages installation failed, continuing!"
