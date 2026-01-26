@@ -152,14 +152,22 @@ DEBUG=false
 
 
 
+
 UTILITY_VERSION="0.1.0"
+
+logo_print(){
+    echo "███    ███ ██   ██ ██    ██ ███    ███" 
+    echo "████  ████ ██   ██  ██  ██  ████  ████" 
+    echo "██ ████ ██ ███████   ████   ██ ████ ██" 
+    echo "██  ██  ██ ██   ██    ██    ██  ██  ██" 
+    echo "██      ██ ██   ██    ██    ██      ██$UTILITY_VERSION"                                       
+}
 
 
 
 if [[ $NO_PROMPT != true ]];then
-    echo "MHYM "$UTILITY_VERSION
+    logo_print
 fi
-
 
 
 UTILITY_DEPS=( "rev" )
