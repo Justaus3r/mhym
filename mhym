@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # vim: filetype=bash
 
-set -e
-
 ###############################################################################
 #                        MHYM CONFIGURATION
 
@@ -138,10 +136,6 @@ POST_INSTALL_SYSTEM_PACAGES=(
 # set all the pre-run configuration options here
 NO_PROMPT=false
 
-# give debug info
-DEBUG=false
-
-
 #-----------------------------------------------
 
 
@@ -153,6 +147,8 @@ DEBUG=false
 
 
 
+
+set -e
 
 UTILITY_VERSION="0.1.0"
 UTILITY_DEPS=( "rev" )
@@ -168,7 +164,7 @@ info(){
     if [[ "$2" = "log" ]];then
         prefix_str="\x1b[32m[INFO]::"
     fi
-    printf "$prefix_str$1$suffix_str"
+    printf "%s%s%s" "$prefix_str" "$1" "$suffix_str"
 }
 
 
@@ -176,7 +172,7 @@ warning(){
     if [[ $NO_PROMPT = true ]]; then
         return
     fi
-   printf "\x1b[33m[WARNING]::$1\x1b[m\n"
+   printf "\x1b[33m[WARNING]::%s\x1b[m\n" "$1"
 }
 
 error(){
@@ -185,7 +181,7 @@ error(){
     elif [[ $NO_PROMPT = true ]]; then
         return
     fi
-   printf "\x1b[31m[ERROR]::$1\x1b[m\n"
+   printf "\x1b[31m[ERROR]::%s\x1b[m\n" "$1"
    if [[ "$2" = "exit-after" ]]; then
        exit 1
    fi
@@ -215,8 +211,11 @@ pre_run_check(){
         error "Unsupported System!, quitting!" "exit-after"
     fi
     
-    local distribution_id=$(cat /etc/*-release | grep -w "ID")
-    local distribution="${distribution_id:3}"
+
+    local distribution_id
+    local distribution
+    distribution_id=$(cat /etc/*-release | grep -w "ID")
+    distribution="${distribution_id:3}"
     if [[ "$distribution" != "debian" ]];then
         warning "Non-debian system detected!. Platforms other than Debian are Untested!. continuing..."
         sleep 1.5
@@ -225,7 +224,7 @@ pre_run_check(){
 
 check_dependencies(){ 
    for dep in "${UTILITY_DEPS[@]}"; do
-       if [[ ! $(command -v $dep) ]]; then
+       if [[ ! $(command -v "$dep") ]]; then
            error "$dep not found, quitting!" "exit-after"
         fi
    done
@@ -248,7 +247,8 @@ sync_apt_repo(){
 }
 
 install_n_configure_sudo(){
-    local user_name=$(whoami)
+    local user_name
+    user_name=$(whoami)
     printf "Is sudo avaliable?: "
     if [[ $(command -v sudo) ]]; then
         printf "\x1b[32mYES\x1b[\n"
@@ -256,7 +256,7 @@ install_n_configure_sudo(){
     else
         printf "\x1b[31mNO\x1b[m\n"
     fi
-    read -n1 -p "Do you want me to try to automatically install and configure sudo [Y/N] " opt
+    read -r -n1 -p "Do you want me to try to automatically install and configure sudo [Y/N] " opt
     case $opt in
         Y | y | yes)
             # using true as nop.
@@ -279,12 +279,13 @@ install_n_configure_sudo(){
         error "error logging to su user, quitting" "exit-after"
 
     elif [[ $ret_code -ne 0 ]]; then
-
-        error "error occured while installing sudo\nReason: \nnon-zero return-code returned\nRET CODE: $?\nresolve manually and continue, quitting" "exit-after"
+        
+        error "error occured while installing sudo\nReason: \nnon-zero return-code returned\nRET CODE: $ret_code\nresolve manually and continue, quitting" "exit-after"
     fi
     info "Adding $user_name to sudo group"
     su -c "/sbin/usermod -aG sudo $user_name> /dev/null" > /dev/null
-    if [[ $? -ne 0 ]]; then
+    local ret_code=$?
+    if [[ $ret_code -ne 0 ]]; then
         error "Failed adding \`$user_name\` to sudo group. resolve manually and continue, quitting!" "exit-after"
     fi
     touch "$HOME/.MHYM_RESUME_STATE"
@@ -297,45 +298,52 @@ install_dwm_deps(){
     info "Installing DWM Dependencies..."
     info "It may take a while... Dont do unnecessary inputs"
     yes | sudo apt install "${DWM_DEP_PACKAGES[@]}" > /dev/null
-    if [[ $? -ne 0 ]]; then
+    local ret_code=$?
+    if [[ $ret_code -ne 0 ]]; then
+        local package_list="${DWM_DEP_PACKAGES[*]}"
         error "error while installing required dwm dependencies"
-        error "packages include: ${DWM_DEP_PACKAGES[@]}"
+        error "packages include: $package_list"
         error "resolve these manually and continue, quitting!" "exit-after"
     fi
 }
 
 __get_repo_name(){
     local uri=$1
-    local uri_reversed=$(echo $uri | rev)
+    local uri_reversed
+    uri_reversed="$(echo "$uri" | rev)"
     OIFS=$IFS
     IFS="/"
-    read -r repo_name_rev _tmp <<< $uri_reversed
+    read -r repo_name_rev _tmp <<< "$uri_reversed"
     IFS=$OIFS
     local endswith_dot_git=true
     if [[ ! "${repo_name_rev:0:4}" = "tig." ]];then
         endswith_dot_git=false
     fi 
-    local repo_name=$(echo $repo_name_rev | rev)
+    local repo_name
+    repo_name="$(echo "$repo_name_rev" | rev)"
     if [[ $endswith_dot_git = true ]]; then
-        printf "${repo_name:0:-4}"
+        printf "%s" "${repo_name:0:-4}"
     else
 
-        printf "$repo_name"
+        printf "%s" "$repo_name"
     fi
 }
 
 
 git_clone_repo(){
     local repo_uri=$1
-    git clone $repo_uri > /dev/null
-    if [[ "$?" -ne "0" ]]; then
+    git clone "$repo_uri" > /dev/null
+    local ret_code
+    ret_code=$?
+    if [[ $ret_code -ne 0 ]]; then
         error "error cloning remote repository at $repo_uri. resolve manually and continue, quitting!" "exit-after"
     fi
 }
 
 __analyze_uri(){
     local uri=$1
-    local reverse_uri="$(echo $uri | rev)"
+    local reverse_uri
+    reverse_uri="$(echo "$uri" | rev)"
     if [[ "${uri:0:4}" = "file" ]]; then
         printf "local"
     elif [[ "${uri:0:4}" = "http" ]] && [[ "${reverse_uri:0:4}" = "tig." ]] || [[ "${uri:8:3}" = "git" ]]; then
@@ -350,8 +358,8 @@ __analyze_uri(){
 readline_prompt(){
     local prompt_str=$1
     local out_varname=$2
-    read -e -p "$prompt_str" prompt_input 
-    printf -v "$out_varname" "$prompt_input"
+    read -r -e -p "$prompt_str" prompt_input 
+    printf -v "$out_varname" "%s" "$prompt_input"
 }
 
 install_n_configure_dwm(){
@@ -366,20 +374,22 @@ install_n_configure_dwm(){
     fi
 
 
-    local repo_type=$(__analyze_uri $DWM_URI)
+    local repo_type
+    repo_type="$(__analyze_uri "$DWM_URI")"
     
     if [[ "$repo_type" = "invalid" ]];then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     
     elif [[ "$repo_type" = "remote-git" ]];then
-        local repo_name=$(__get_repo_name $DWM_URI)
-        git_clone_repo $DWM_URI
-        cd ./$repo_name
+        local repo_name
+        repo_name="$(__get_repo_name "$DWM_URI")"
+        git_clone_repo "$DWM_URI"
+        cd "./$repo_name"
     
     elif [[ "$repo_type" = "local" ]];then
         # truncate the file:// scheme
         DWM_URI="${DWM_URI:7}" 
-         cd $DWM_URI
+        cd "$DWM_URI"
     
      else
         warning "uri assertion has failed , report this issue!"
@@ -393,34 +403,38 @@ install_n_configure_dwm(){
     else 
         info "showing catalog of make commands for dwm build..." "log"
     fi
-    sudo $DWM_MAKE_CMD $null_redirect 
-    if [[ $? -ne 0 ]]; then
+    sudo "$DWM_MAKE_CMD $null_redirect"
+    local ret_code
+    ret_code=$?
+    if [[ $ret_code -ne 0 ]]; then
         error " \` make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi 
     make clean >/dev/null
-    cd $CWD
+    cd "$CWD"
 }
 
 install_n_configure_dmenu(){
     info "Installing DMENU..." "log" 
-    local cwd="$PWD"
+    local CWD="$PWD"
     cd /tmp
     if [[ -z "$DMENU_URI" ]]; then
         readline_prompt "[DMENU URI]: " DMENU_URI
     fi
-    local repo_type=$(__analyze_uri $DMENU_URI)
+    local repo_type
+    repo_type="$(__analyze_uri "$DMENU_URI")"
     
     if [[ $repo_type = "invalid" ]];then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     
     elif [[ $repo_type = "local" ]]; then
         local truncted_filepath=${DMENU_URI:7}
-        cd $truncted_filepath
+        cd "$truncted_filepath"
     
     elif [[ $repo_type = "remote-git" ]];then
-        git_clone_repo $DMENU_URI
-        local repo_name=$(__get_repo_name $DMENU_URI)
-        cd $repo_name
+        git_clone_repo "$DMENU_URI"
+        local repo_name
+        repo_name="$(__get_repo_name "$DMENU_URI")"
+        cd "$repo_name"
     
     else
         warning "got $repo_type as repository type, which was not expected!"
@@ -435,11 +449,14 @@ install_n_configure_dmenu(){
     else 
         info "showing catalog of make commands for dmenu build..." "log"
     fi 
-    sudo $DMENU_MAKE_CMD $null_redirect
-    if [[ $? -ne 0 ]]; then
+    sudo "$DMENU_MAKE_CMD $null_redirect"
+    local ret_code
+    ret_code=$?
+    if [[ $ret_code -ne 0 ]]; then
         error " \`make install\` failed. resolve that manually and continue, quitting!" "exit-after"
     fi
     make clean > /dev/null
+    cd "$CWD"
 }
 
 install_n_configure_dwmbar(){
@@ -452,16 +469,17 @@ install_n_configure_dwmbar(){
     if [[ -z $DWMBAR_URI ]];then
         readline_prompt "[DWMBAR URI]: " DWMBAR_URI
     fi
-    
-    local repo_type=$(__analyze_uri $DWMBAR_URI)
+    local repo_type
+    repo_type="$(__analyze_uri "$DWMBAR_URI")"
     
     if [[ "$repo_type" = "remote-git" ]]; then
-        local repo_name=$(__get_repo_name $DWMBAR_URI)
-        git clone $DWMBAR_URI
-        cd $repo_name
+        local repo_name
+        repo_name="$(__get_repo_name "$DWMBAR_URI")"
+        git clone "$DWMBAR_URI"
+        cd "$repo_name"
     elif [[ "$repo_type" = "local" ]];then
         DWMBAR_URI=${DWMBAR_URI:7}
-        cd $DWMBAR_URI
+        cd "$DWMBAR_URI"
     elif [[ "$repo_type" = "invalid" ]]; then
         error "invalid uri. please give a valid git http/file uri, quitting!" "exit-after"
     fi
@@ -472,16 +490,18 @@ install_n_configure_dwmbar(){
         null_redirect="> /dev/null"
     fi
 
-    sudo ./install.sh $null_redirect
+    sudo ./install.sh "$null_redirect"
     
-    cd $CWD
+    cd "$CWD"
 }
 
 install_n_configure_terminal_emulator(){
     # ig, for now we just install the relevant package
     yes | sudo apt install $TERMINAL_PKG
-    if [[ $? -ne 0 ]]; then
-        warning "error while installing `$TERMINAL_PKG` terminal emulator package. Please install it manually afterwards..."
+    local ret_code
+    ret_code=$?
+    if [[ $ret_code -ne 0 ]]; then
+        warning "error while installing \`$TERMINAL_PKG\` terminal emulator package. Please install it manually afterwards..."
     fi
 }
 
@@ -490,7 +510,8 @@ setup_post_install_packages(){
     info "following packages will be installed:"
     echo "${POST_INSTALL_SYSTEM_PACAGES[@]}"
     yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
-    if [[ $? -ne 0 ]];then
+    local ret_code=$?
+    if [[ $ret_code -ne 0 ]];then
     	warning "system packages installation failed, continuing!"
     fi
 }
@@ -500,16 +521,18 @@ setup_post_install_packages(){
 set_xinitrc() {
     if [[ -z "$BACKGROUND_URI" ]];then
         readline_prompt "[BACKGROUND_URI]: " out
-        BACKGROUND_URI=$out
+        # shellcheck disable=SC2154
+        BACKGROUND_URI="$out" 
     fi
     
     local bg_path
-    local bg_type=$(__analyze_uri $BACKGROUND_URI)
+    local bg_type
+    bg_type="$(__analyze_uri "$BACKGROUND_URI")"
     local file_name 
     if [[ "$bg_type" = "local" ]];then
         bg_path=${BACKGROUND_URI:7}
     elif [[ "$bg_type" = "remote" ]];then
-        file_name=$(basename $BACKGROUND_URI) 
+        file_name="$(basename "$BACKGROUND_URI")" 
         wget "$BACKGROUND_URI" -O "$HOME/$file_name"
         bg_path="$HOME/$file_name"
     elif [[ "$bg_type" = "invalid" ]];then
@@ -546,11 +569,12 @@ exec dwmbar &
 exec dwm 
 EOT
     if [[ $EXEC_AT_LOGIN = true ]]; then
+        # shellcheck disable=SC2140
         echo "[ -z "\$DISPLAY" ] && [ "\$XDG_VTNR" = 1 ] && exec startx" >> "$HOME/.bash_profile"
     fi
 
     # since the current user is put in sudoers file. put /sbin to PATH
-    echo "PATH=$PATH:/sbin" >> $HOME/.bashrc
+    echo "PATH=$PATH:/sbin" >> "$HOME"/.bashrc
 }
 
 
