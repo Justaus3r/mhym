@@ -398,7 +398,8 @@ install_n_configure_dwm(){
     else 
         info "showing catalog of make commands for dwm build..." "log"
     fi
-    sudo "$DWM_MAKE_CMD $null_redirect"
+    # shellcheck disable=SC2086
+    sudo $DWM_MAKE_CMD $null_redirect
     local ret_code
     ret_code=$?
     if [[ $ret_code -ne 0 ]]; then
@@ -444,7 +445,8 @@ install_n_configure_dmenu(){
     else 
         info "showing catalog of make commands for dmenu build..." "log"
     fi 
-    sudo "$DMENU_MAKE_CMD $null_redirect"
+    # shellcheck disable=SC2086
+    sudo $DMENU_MAKE_CMD $null_redirect
     local ret_code
     ret_code=$?
     if [[ $ret_code -ne 0 ]]; then
@@ -484,8 +486,8 @@ install_n_configure_dwmbar(){
     if [[ $NO_PROMPT = true ]];then
         null_redirect="> /dev/null"
     fi
-
-    sudo ./install.sh "$null_redirect"
+    # shellcheck disable=SC2086
+    sudo ./install.sh $null_redirect
     
     cd "$CWD"
 }
@@ -503,7 +505,7 @@ install_n_configure_terminal_emulator(){
 setup_post_install_packages(){
     info "installing post-install system-packages" "log"
     info "following packages will be installed:"
-    echo "${POST_INSTALL_SYSTEM_PACAGES[@]}"
+    info "${POST_INSTALL_SYSTEM_PACAGES[*]}"
     yes | sudo apt install "${POST_INSTALL_SYSTEM_PACAGES[@]}" > /dev/null
     local ret_code=$?
     if [[ $ret_code -ne 0 ]];then
