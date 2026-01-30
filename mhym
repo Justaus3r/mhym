@@ -197,11 +197,6 @@ logo_print(){
 }
 
 
-
-if [[ $NO_PROMPT != true ]];then
-    logo_print
-fi
-
 pre_run_check(){
     if [[ -z "$BASH" ]]; then
         error "$0 only works in BASH, quitting!" "exit-after"
@@ -590,6 +585,9 @@ clean_up_n_exit(){
     exit 0
 }
 
+if [[ $NO_PROMPT != true ]];then
+    logo_print
+fi
 
 # if in a resumed state, skip to post sudo install
 if [ -e "$HOME/.MHYM_RESUME_STATE" ]; then
