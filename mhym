@@ -188,12 +188,12 @@ error(){
 }
 
 logo_print(){
-   info  "███    ███ ██   ██ ██    ██ ███    ███" 
-   info  "████  ████ ██   ██  ██  ██  ████  ████" 
-   info  "██ ████ ██ ███████   ████   ██ ████ ██" 
-   info  "██  ██  ██ ██   ██    ██    ██  ██  ██" 
-   info  "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION"
-   info "A utility for ricing up vanilla debian with your personal dwm setup"
+   info  "███    ███ ██   ██ ██    ██ ███    ███\n" 
+   info  "████  ████ ██   ██  ██  ██  ████  ████\n" 
+   info  "██ ████ ██ ███████   ████   ██ ████ ██\n" 
+   info  "██  ██  ██ ██   ██    ██    ██  ██  ██\n" 
+   info  "██      ██ ██   ██    ██    ██      ██v$UTILITY_VERSION\n"
+   info "A utility for ricing up vanilla debian with your personal dwm setup\n"
 }
 
 
