@@ -164,7 +164,7 @@ info(){
     if [[ "$2" = "log" ]];then
         prefix_str="\x1b[32m[INFO]::"
     fi
-    printf "%s%s%s" "$prefix_str" "$1" "$suffix_str"
+    printf "%b%b%b" "$prefix_str" "$1" "$suffix_str"
 }
 
 
